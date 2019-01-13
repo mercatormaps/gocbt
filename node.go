@@ -52,6 +52,18 @@ func (n *Node) Teardown(t *testing.T) {
 	}
 }
 
+func (n *Node) Host() string {
+	return n.host
+}
+
+func (n *Node) Username() string {
+	return n.username
+}
+
+func (n *Node) Password() string {
+	return n.password
+}
+
 type NodeConfigOption func(*nodeConfig)
 
 func DockerImage(image string) NodeConfigOption {
