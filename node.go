@@ -14,7 +14,7 @@ import (
 
 type Node struct {
 	containerID string
-	host        string
+	ip          string
 	username    string
 	password    string
 }
@@ -41,9 +41,15 @@ func (n *Node) Setup(t *testing.T, opts ...NodeConfigOption) {
 
 	port := strconv.FormatUint(uint64(conf.port), 10)
 	setPortAndCredentials(t, ip, port, conf.username, conf.password)
-	n.host = "couchbase://" + ip + ":" + port
+	n.ip = ip
 	n.username = conf.username
 	n.password = conf.password
+}
+
+func (n *Node) Configure(t *testing.T, opts ...ClusterConfigOption) {
+	c := connectToCluster(t, n.ip, n.username, n.password)
+	c.configure(t, opts...)
+	c.close(t)
 }
 
 func (n *Node) Teardown(t *testing.T) {
@@ -53,7 +59,7 @@ func (n *Node) Teardown(t *testing.T) {
 }
 
 func (n *Node) Host() string {
-	return n.host
+	return "couchbase://" + n.ip
 }
 
 func (n *Node) Username() string {
@@ -99,12 +105,6 @@ func Credentials(username, password string) NodeConfigOption {
 	}
 }
 
-func Bucket(name string) NodeConfigOption {
-	return func(conf *nodeConfig) {
-		conf.buckets = append(conf.buckets, name)
-	}
-}
-
 type nodeConfig struct {
 	image       string
 	timeoutSecs int
@@ -116,8 +116,6 @@ type nodeConfig struct {
 	dataQuotaMb   uint
 	indexQuotaMb  uint
 	searchQuotaMb uint
-
-	buckets []string
 }
 
 const defaultPort = 8091
