@@ -39,6 +39,8 @@ func (n *Node) Setup(t *testing.T, opts ...NodeConfigOption) {
 		strconv.FormatUint(uint64(conf.indexQuotaMb), 10),
 		strconv.FormatUint(uint64(conf.searchQuotaMb), 10))
 
+	setServices(t, ip)
+
 	port := strconv.FormatUint(uint64(conf.port), 10)
 	setPortAndCredentials(t, ip, port, conf.username, conf.password)
 	n.ip = ip
@@ -133,6 +135,31 @@ func defaultNodeConfig() nodeConfig {
 	}
 }
 
+func setMemoryQuotas(t *testing.T, ip, dataMb, indexMb, searchMb string) {
+	data := url.Values{}
+	data.Set("memoryQuota", dataMb)
+	data.Set("indexMemoryQuota", indexMb)
+	data.Set("ftsMemoryQuota", searchMb)
+
+	postNoAuth(t, ip, "pools/default", data)
+}
+
+func setServices(t *testing.T, ip string) {
+	data := url.Values{}
+	data.Set("services", "kv,n1ql,index,fts")
+
+	postNoAuth(t, ip, "node/controller/setupServices", data)
+}
+
+func setPortAndCredentials(t *testing.T, ip, port, username, password string) {
+	data := url.Values{}
+	data.Set("port", port)
+	data.Set("username", username)
+	data.Set("password", password)
+
+	postNoAuth(t, ip, "settings/web", data)
+}
+
 func postNoAuth(t *testing.T, ip, path string, data url.Values) {
 	uri, err := url.ParseRequestURI(fmt.Sprintf("http://%s:%d", ip, defaultPort))
 	require.NoError(t, err)
@@ -146,25 +173,8 @@ func postNoAuth(t *testing.T, ip, path string, data url.Values) {
 	resp, err := cli.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
-	require.Equal(t, http.StatusOK, resp.StatusCode)
-}
-
-func setMemoryQuotas(t *testing.T, ip, dataMb, indexMb, searchMb string) {
-	data := url.Values{}
-	data.Set("memoryQuota", dataMb)
-	data.Set("indexMemoryQuota", indexMb)
-	data.Set("ftsMemoryQuota", searchMb)
-
-	postNoAuth(t, ip, "pools/default", data)
-}
-
-func setPortAndCredentials(t *testing.T, ip, port, username, password string) {
-	data := url.Values{}
-	data.Set("port", port)
-	data.Set("username", username)
-	data.Set("password", password)
-
-	postNoAuth(t, ip, "settings/web", data)
+	require.Equal(t, http.StatusOK, resp.StatusCode,
+		fmt.Sprintf("expected %d, got %s: %+v", http.StatusOK, resp.Status, *resp))
 }
 
 func wait(t *testing.T, ip string, timeout int) {
