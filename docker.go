@@ -14,10 +14,17 @@ func pullAndStart(t *testing.T, image string) (string, string) {
 	cli, err := client.NewEnvClient()
 	require.NoError(t, err)
 
-	ctx := context.Background()
-	_, err = cli.ImagePull(ctx, image, types.ImagePullOptions{})
+	_, err = cli.ImagePull(context.Background(), image, types.ImagePullOptions{})
 	require.NoError(t, err)
 
+	return start(t, image)
+}
+
+func start(t *testing.T, image string) (string, string) {
+	cli, err := client.NewEnvClient()
+	require.NoError(t, err)
+
+	ctx := context.Background()
 	cont, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: image,
 	}, nil, nil, "")

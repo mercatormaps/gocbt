@@ -29,7 +29,12 @@ func (n *Node) Setup(t *testing.T, opts ...NodeConfigOption) {
 		opt(&conf)
 	}
 
-	id, ip := pullAndStart(t, conf.image)
+	var id, ip string
+	if conf.alwaysPull {
+		id, ip = pullAndStart(t, conf.image)
+	} else {
+		id, ip = start(t, conf.image)
+	}
 	n.containerID = id
 
 	wait(t, ip, conf.timeoutSecs)
@@ -80,6 +85,12 @@ func DockerImage(image string) NodeConfigOption {
 	}
 }
 
+func AlwaysPull(pull bool) NodeConfigOption {
+	return func(conf *nodeConfig) {
+		conf.alwaysPull = pull
+	}
+}
+
 func Timeout(secs int) NodeConfigOption {
 	return func(conf *nodeConfig) {
 		conf.timeoutSecs = secs
@@ -108,7 +119,9 @@ func Credentials(username, password string) NodeConfigOption {
 }
 
 type nodeConfig struct {
-	image       string
+	image      string
+	alwaysPull bool
+
 	timeoutSecs int
 
 	port     uint
@@ -125,6 +138,7 @@ const defaultPort = 8091
 func defaultNodeConfig() nodeConfig {
 	return nodeConfig{
 		image:         "docker.io/library/couchbase:community-6.0.0",
+		alwaysPull:    true,
 		timeoutSecs:   20,
 		dataQuotaMb:   1024,
 		indexQuotaMb:  256,
