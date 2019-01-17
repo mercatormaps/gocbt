@@ -204,9 +204,9 @@ func wait(t *testing.T, ip string, timeout int) {
 
 		if timeout > 0 && secs >= timeout {
 			t.Fatalf("timed out waiting for node %s for %d seconds; try increasing the timeout using node.Setup(Timeout(#))", ip, timeout)
+		} else {
+			time.Sleep(1 * time.Second)
+			secs++
 		}
-
-		time.Sleep(1 * time.Second)
-		secs++
 	}
 }
