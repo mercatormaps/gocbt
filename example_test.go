@@ -12,5 +12,6 @@ func TestExampleNode(t *testing.T) {
 	n.Setup(t)
 	n.Configure(t,
 		gocbt.Bucket("sample_bucket_1"),
-		gocbt.Bucket("sample_bucket_2"))
+		gocbt.Bucket("sample_bucket_2"),
+		gocbt.GeoSearchIndex("my-geo", "sample_bucket_1"))
 }

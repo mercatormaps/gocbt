@@ -37,7 +37,7 @@ func (n *Node) Setup(t *testing.T, opts ...NodeConfigOption) {
 	}
 	n.containerID = id
 
-	wait(t, ip, conf.timeoutSecs)
+	waitForNode(t, ip, conf.timeoutSecs)
 
 	setMemoryQuotas(t, ip,
 		strconv.FormatUint(uint64(conf.dataQuotaMb), 10),
@@ -54,9 +54,12 @@ func (n *Node) Setup(t *testing.T, opts ...NodeConfigOption) {
 }
 
 func (n *Node) Configure(t *testing.T, opts ...ClusterConfigOption) {
-	c := connectToCluster(t, n.ip, n.username, n.password)
+	c := &Cluster{
+		ip:       n.ip,
+		username: n.username,
+		password: n.password,
+	}
 	c.configure(t, opts...)
-	c.close(t)
 }
 
 func (n *Node) Teardown(t *testing.T) {
@@ -191,7 +194,7 @@ func postNoAuth(t *testing.T, ip, path string, data url.Values) {
 		fmt.Sprintf("expected %d, got %s: %+v", http.StatusOK, resp.Status, *resp))
 }
 
-func wait(t *testing.T, ip string, timeout int) {
+func waitForNode(t *testing.T, ip string, timeout int) {
 	secs := 0
 	for {
 		resp, err := http.Get(fmt.Sprintf("http://%s:%d", ip, defaultPort))
