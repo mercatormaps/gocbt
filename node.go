@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Node provides access to node-level configuration and operations.
 type Node struct {
 	containerID string
 	ip          string
@@ -19,10 +20,13 @@ type Node struct {
 	password    string
 }
 
+// NewNode creates a new Node struct.
 func NewNode() *Node {
 	return &Node{}
 }
 
+// Setup creates a new Couchbase node with optional specified configuration.
+// Configuration includes the Docker image to use, node memory quotas, and node credentials.
 func (n *Node) Setup(t *testing.T, opts ...NodeConfigOption) {
 	conf := defaultNodeConfig()
 	for _, opt := range opts {
@@ -53,6 +57,7 @@ func (n *Node) Setup(t *testing.T, opts ...NodeConfigOption) {
 	n.password = conf.password
 }
 
+// Configure buckets and indexes.
 func (n *Node) Configure(t *testing.T, opts ...ClusterConfigOption) {
 	c := &Cluster{
 		ip:       n.ip,
@@ -62,50 +67,63 @@ func (n *Node) Configure(t *testing.T, opts ...ClusterConfigOption) {
 	c.configure(t, opts...)
 }
 
+// Teardown the node destroys the container.
 func (n *Node) Teardown(t *testing.T) {
 	if n.containerID != "" {
 		stopAndRemove(t, n.containerID)
 	}
 }
 
+// Host returns connection string that can be used with gocb.Connect().
 func (n *Node) Host() string {
 	return "couchbase://" + n.ip
 }
 
+// Username of the node.
 func (n *Node) Username() string {
 	return n.username
 }
 
+// Password of the node.
 func (n *Node) Password() string {
 	return n.password
 }
 
+// NodeConfigOption functions can be passed to Node.Setup() to configure its creation.
 type NodeConfigOption func(*nodeConfig)
 
+// DockerImage configures the Couchbase image.
 func DockerImage(image string) NodeConfigOption {
 	return func(conf *nodeConfig) {
 		conf.image = image
 	}
 }
 
+// AlwaysPull is set to true by default.
+// When true, Node.Setup() will attempt to pull the latest image specified by DockerImage().
+// When false, Node.Setup() will use the locally available image specified by DockerImage().
+// Setting this to true allows the library to be used without a network connection.
 func AlwaysPull(pull bool) NodeConfigOption {
 	return func(conf *nodeConfig) {
 		conf.alwaysPull = pull
 	}
 }
 
+// Timeout configures a time in seconds to wait for a node to be available.
 func Timeout(secs int) NodeConfigOption {
 	return func(conf *nodeConfig) {
 		conf.timeoutSecs = secs
 	}
 }
 
+// Port configures the port.
 func Port(port uint) NodeConfigOption {
 	return func(conf *nodeConfig) {
 		conf.port = port
 	}
 }
 
+// MemoryQuotas configures the data, index and search memory quotas in megabytes.
 func MemoryQuotas(dataMb, indexMb, searchMb uint) NodeConfigOption {
 	return func(conf *nodeConfig) {
 		conf.dataQuotaMb = dataMb
@@ -114,6 +132,8 @@ func MemoryQuotas(dataMb, indexMb, searchMb uint) NodeConfigOption {
 	}
 }
 
+// Credentials configures the username and password for the node.
+// These can be retrieved again with Node.Username() and Node.Password().
 func Credentials(username, password string) NodeConfigOption {
 	return func(conf *nodeConfig) {
 		conf.username = username

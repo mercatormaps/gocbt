@@ -9,6 +9,7 @@ import (
 	gocb "gopkg.in/couchbase/gocb.v1"
 )
 
+// Cluster provides access to cluster-level configuration and operations.
 type Cluster struct {
 	ip       string
 	username string
@@ -107,8 +108,10 @@ func (c *Cluster) createIndexes(t *testing.T, indexes []indexConfig, timeout int
 	}
 }
 
+// ClusterConfigOption functions can be passed to Node.Configure() to configure its creation.
 type ClusterConfigOption func(*clusterConfig)
 
+// Bucket configures a bucket creation with the specified name, and other optional parameters.
 func Bucket(name string, opts ...BucketConfigOption) ClusterConfigOption {
 	return func(conf *clusterConfig) {
 		bConf := defaultBucketConfig()
@@ -119,12 +122,14 @@ func Bucket(name string, opts ...BucketConfigOption) ClusterConfigOption {
 	}
 }
 
+// BucketTimeout configures a time in seconds to wait for a bucket to be created.
 func BucketTimeout(secs int) ClusterConfigOption {
 	return func(conf *clusterConfig) {
 		conf.bucketTimeout = secs
 	}
 }
 
+// GeoSearchIndex configures a geospatial index creation with the specified name for the specified bucket.
 func GeoSearchIndex(name, bucket string) ClusterConfigOption {
 	return func(conf *clusterConfig) {
 		b := gocb.SearchIndexDefinitionBuilder{}
@@ -184,6 +189,7 @@ func GeoSearchIndex(name, bucket string) ClusterConfigOption {
 	}
 }
 
+// IndexTimeout configures a time in seconds to wait for an index to be created.
 func IndexTimeout(secs int) ClusterConfigOption {
 	return func(conf *clusterConfig) {
 		conf.indexTimeout = secs
