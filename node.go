@@ -27,7 +27,7 @@ func NewNode() *Node {
 
 // Setup creates a new Couchbase node with optional specified configuration.
 // Configuration includes the Docker image to use, node memory quotas, and node credentials.
-func (n *Node) Setup(t *testing.T, opts ...NodeConfigOption) {
+func (n *Node) Setup(t *testing.T, opts ...NodeConfigOption) *Node {
 	conf := defaultNodeConfig()
 	for _, opt := range opts {
 		opt(&conf)
@@ -55,6 +55,8 @@ func (n *Node) Setup(t *testing.T, opts ...NodeConfigOption) {
 	n.ip = ip
 	n.username = conf.username
 	n.password = conf.password
+
+	return n
 }
 
 // Configure buckets and indexes.
