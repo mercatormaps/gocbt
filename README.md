@@ -16,9 +16,9 @@ func TestUserRegistration(t *testing.T) {
 
     // Connect to Couchbase
     app := StartApp(Config{
-        CouchbaseHost:     node.Host,
-        CouchbaseUsername: node.Username,
-        CouchbasePassword: node.Password,
+        CouchbaseHost:     node.Host(),
+        CouchbaseUsername: node.Username(),
+        CouchbasePassword: node.Password(),
     })
 
     // Run the test case
