@@ -1,4 +1,4 @@
-module github.com/joe-mann/gocbt
+module github.com/mercatormaps/gocbt
 
 require (
 	github.com/Microsoft/go-winio v0.4.11 // indirect

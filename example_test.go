@@ -3,7 +3,7 @@ package gocbt_test
 import (
 	"testing"
 
-	"github.com/joe-mann/gocbt"
+	"github.com/mercatormaps/gocbt"
 )
 
 func TestExampleNode(t *testing.T) {

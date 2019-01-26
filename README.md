@@ -5,7 +5,7 @@ Couchbase integration testing in Go
 
 By default `gocbt` pulls the [official Couchbase Docker image](https://hub.docker.com/r/couchbase/server/), but can be configured to pull any image from any repository. Configuration of the nodes is completely customizable, but sensible defaults are used so only the settings important to your particular use case need be defined.
 
-Below is a simple demonstration of how `gocbt` is used with default configuration. Read about what configuration options are available [here](https://godoc.org/github.com/joe-mann/gocbt).
+Below is a simple demonstration of how `gocbt` is used with default configuration. Read about what configuration options are available [here](https://godoc.org/github.com/mercatormaps/gocbt).
 
 ```go
 func TestUserRegistration(t *testing.T) {
