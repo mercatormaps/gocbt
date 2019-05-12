@@ -7,6 +7,7 @@ import (
 )
 
 func TestExampleNode(t *testing.T) {
+	gocbt.EnableLogging()
 	n := gocbt.NewNode()
 	defer n.Teardown(t)
 	n.Setup(t).Configure(t,

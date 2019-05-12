@@ -12,6 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// EnableLogging - disabled by default, but useful is something isn't working.
+func EnableLogging() {
+	loggingEnabled = true
+}
+
 // Node provides access to node-level configuration and operations.
 type Node struct {
 	containerID string
@@ -42,19 +47,23 @@ func (n *Node) Setup(t *testing.T, opts ...NodeConfigOption) *Node {
 	n.containerID = id
 
 	waitForNode(t, ip, conf.timeoutSecs)
+	logf(t, "Container '%s' has started", id)
 
 	setMemoryQuotas(t, ip,
 		strconv.FormatUint(uint64(conf.dataQuotaMb), 10),
 		strconv.FormatUint(uint64(conf.indexQuotaMb), 10),
 		strconv.FormatUint(uint64(conf.searchQuotaMb), 10))
+	logf(t, "Memory quotas set [data %d, index %d, search %d]", conf.dataQuotaMb, conf.indexQuotaMb, conf.searchQuotaMb)
 
 	setServices(t, ip)
+	logf(t, "Enabled all services")
 
 	port := strconv.FormatUint(uint64(conf.port), 10)
 	setPortAndCredentials(t, ip, port, conf.username, conf.password)
 	n.ip = ip
 	n.username = conf.username
 	n.password = conf.password
+	logf(t, "Credentials and port set [port %d, username '%s', password '%s']", conf.port, conf.username, conf.password)
 
 	return n
 }
@@ -73,6 +82,7 @@ func (n *Node) Configure(t *testing.T, opts ...ClusterConfigOption) {
 func (n *Node) Teardown(t *testing.T) {
 	if n.containerID != "" {
 		stopAndRemove(t, n.containerID)
+		logf(t, "Removed container '%s'", n.containerID)
 	}
 }
 
@@ -233,5 +243,13 @@ func waitForNode(t *testing.T, ip string, timeout int) {
 			time.Sleep(1 * time.Second)
 			secs++
 		}
+	}
+}
+
+var loggingEnabled bool
+
+func logf(t *testing.T, format string, args ...interface{}) {
+	if loggingEnabled {
+		t.Logf(format, args...)
 	}
 }

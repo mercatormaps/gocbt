@@ -55,8 +55,10 @@ func (c *Cluster) createBuckets(t *testing.T, buckets map[string]bucketConfig, t
 
 		secs := 0
 		for {
-			if _, err := cli.OpenBucket(name, ""); err == nil {
-				return
+			if b, err := cli.OpenBucket(name, ""); err == nil {
+				logf(t, "Bucket '%s' created ok", name)
+				require.NoError(t, b.Close())
+				break
 			}
 
 			if timeout > 0 && secs >= timeout {
@@ -79,7 +81,8 @@ func (c *Cluster) createIndexes(t *testing.T, indexes []indexConfig, timeout int
 	for _, index := range indexes {
 		secs := 0
 		for {
-			if _, err := cli.OpenBucket(index.bucket, ""); err != nil {
+			b, err := cli.OpenBucket(index.bucket, "")
+			if err != nil {
 				if strings.ToLower(err.Error()) == "no access" {
 					goto sleep
 				} else {
@@ -95,7 +98,9 @@ func (c *Cluster) createIndexes(t *testing.T, indexes []indexConfig, timeout int
 				}
 			}
 
-			return
+			require.NoError(t, b.Close())
+			logf(t, "Index '%s' created ok", index.name)
+			break
 
 		sleep:
 			if timeout > 0 && secs >= timeout {
