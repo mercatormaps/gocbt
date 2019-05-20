@@ -135,7 +135,7 @@ func BucketTimeout(secs int) ClusterConfigOption {
 }
 
 // GeoSearchIndex configures a geospatial index creation with the specified name for the specified bucket.
-func GeoSearchIndex(name, bucket string) ClusterConfigOption {
+func GeoSearchIndex(name, path, bucket string) ClusterConfigOption {
 	return func(conf *clusterConfig) {
 		b := gocb.SearchIndexDefinitionBuilder{}
 		b.AddField("name", name)
@@ -150,24 +150,9 @@ func GeoSearchIndex(name, bucket string) ClusterConfigOption {
 			"mapping": map[string]interface{}{
 				"index_dynamic": true,
 				"default_mapping": map[string]interface{}{
-					"properties": map[string]interface{}{
-						"geo": map[string]interface{}{
-							"fields": []interface{}{
-								map[string]interface{}{
-									"index":                true,
-									"name":                 "geo",
-									"store":                true,
-									"type":                 "geopoint",
-									"include_in_all":       true,
-									"include_term_vectors": true,
-								},
-							},
-							"dynamic": false,
-							"enabled": true,
-						},
-					},
-					"dynamic": true,
-					"enabled": true,
+					"properties": geopoint(path, name),
+					"dynamic":    true,
+					"enabled":    true,
 				},
 				"default_analyzer":        "standard",
 				"default_datetime_parser": "dateTimeOptional",
