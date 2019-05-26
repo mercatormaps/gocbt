@@ -2,7 +2,6 @@ package gocbt_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/couchbase/gocb/cbft"
 	"github.com/mercatormaps/gocbt"
@@ -65,7 +64,7 @@ func (s *ExampleTestSuite) TestExampleNode() {
 	_, err = bucket.Get("my-point", &point)
 	require.NoError(s.T(), err)
 
-	time.Sleep(10 * time.Second)
+	s.couchbase.WaitForIndexing(s.T(), "my-geo", 1)
 
 	query := gocb.NewSearchQuery("my-geo", cbft.NewGeoBoundingBoxQuery(90, -180, -90, 180))
 	results, err := bucket.ExecuteSearchQuery(query)

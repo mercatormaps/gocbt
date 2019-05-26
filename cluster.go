@@ -36,7 +36,7 @@ func (c *Cluster) configure(t *testing.T, opts ...ClusterConfigOption) {
 	}
 
 	c.createBuckets(t, conf.buckets, conf.bucketTimeout)
-	c.createIndexes(t, conf.indexes, conf.indexTimeout)
+	c.createIndexes(t, conf.indexes, conf.createIndexTimeout)
 }
 
 func (c *Cluster) createBuckets(t *testing.T, buckets map[string]bucketConfig, timeout int) {
@@ -104,7 +104,7 @@ func (c *Cluster) createIndexes(t *testing.T, indexes []indexConfig, timeout int
 
 		sleep:
 			if timeout > 0 && secs >= timeout {
-				t.Fatalf("timed out waiting for index %s in bucket %s for %d seconds; try increasing the timeout using IndexTimeout(#)", index.name, index.bucket, timeout)
+				t.Fatalf("timed out waiting for index %s in bucket %s for %d seconds; try increasing the timeout using CreateIndexTimeout(#)", index.name, index.bucket, timeout)
 			} else {
 				time.Sleep(1 * time.Second)
 				secs++
@@ -179,10 +179,10 @@ func GeoSearchIndex(name, path, bucket string) ClusterConfigOption {
 	}
 }
 
-// IndexTimeout configures a time in seconds to wait for an index to be created.
-func IndexTimeout(secs int) ClusterConfigOption {
+// CreateIndexTimeout configures a time in seconds to wait for an index to be created.
+func CreateIndexTimeout(secs int) ClusterConfigOption {
 	return func(conf *clusterConfig) {
-		conf.indexTimeout = secs
+		conf.createIndexTimeout = secs
 	}
 }
 
@@ -190,8 +190,8 @@ type clusterConfig struct {
 	buckets       map[string]bucketConfig
 	bucketTimeout int
 
-	indexes      []indexConfig
-	indexTimeout int
+	indexes            []indexConfig
+	createIndexTimeout int
 }
 
 type indexConfig struct {
@@ -202,8 +202,8 @@ type indexConfig struct {
 
 func defaultClusterConfig() clusterConfig {
 	return clusterConfig{
-		buckets:       make(map[string]bucketConfig),
-		bucketTimeout: 10,
-		indexTimeout:  20,
+		buckets:            make(map[string]bucketConfig),
+		bucketTimeout:      10,
+		createIndexTimeout: 20,
 	}
 }

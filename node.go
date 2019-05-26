@@ -23,6 +23,8 @@ type Node struct {
 	ip          string
 	username    string
 	password    string
+
+	indexTimeout int
 }
 
 // NewNode creates a new Node struct.
@@ -37,6 +39,7 @@ func (n *Node) Setup(t *testing.T, opts ...NodeConfigOption) *Node {
 	for _, opt := range opts {
 		opt(&conf)
 	}
+	n.indexTimeout = conf.indexTimeoutSecs
 
 	var id, ip string
 	if conf.alwaysPull {
@@ -76,6 +79,53 @@ func (n *Node) Configure(t *testing.T, opts ...ClusterConfigOption) {
 		password: n.password,
 	}
 	c.configure(t, opts...)
+}
+
+// WaitForIndexing to be complete on the specified index.
+func (n *Node) WaitForIndexing(t *testing.T, name string, atLeast int) {
+	host := fmt.Sprintf("%s:%d", n.ip, defaultPort)
+
+	secs := 0
+
+	var total int
+	for {
+		var ok bool
+		if total, ok = indexDocCount(t, host, n.username, n.password, name); !ok {
+			logf(t, "Index '%s' not ready yet", name)
+		} else if total < atLeast {
+			logf(t, "Index '%s' still only has %d documents, but waiting for %d", name, total, atLeast)
+		} else {
+			break
+		}
+
+		if n.indexTimeout > 0 && secs >= n.indexTimeout {
+			t.Fatalf("timed out waiting for indexing of index '%s' for %d seconds; try increasing the timeout using IndexTimeout(#)", name, n.indexTimeout)
+		} else {
+			time.Sleep(time.Second)
+			secs++
+		}
+	}
+	logf(t, "Index '%s' has %d docs", name, total)
+
+	for {
+		indexed := sourceDocCount(t, host, n.username, n.password, name)
+		perc := 0
+		if indexed > 0 {
+			perc = total / indexed * 100
+		}
+		logf(t, "%d%% indexed", perc)
+
+		if indexed >= total {
+			break
+		}
+
+		if n.indexTimeout > 0 && secs >= n.indexTimeout {
+			t.Fatalf("timed out waiting for indexing of index '%s' for %d seconds; try increasing the timeout using IndexTimeout(#)", name, n.indexTimeout)
+		} else {
+			time.Sleep(time.Second)
+			secs++
+		}
+	}
 }
 
 // Teardown the node destroys the container.
@@ -153,11 +203,19 @@ func Credentials(username, password string) NodeConfigOption {
 	}
 }
 
+// IndexTimeout configures a time in seconds to wait for indexing to complete.
+func IndexTimeout(secs int) NodeConfigOption {
+	return func(conf *nodeConfig) {
+		conf.indexTimeoutSecs = secs
+	}
+}
+
 type nodeConfig struct {
 	image      string
 	alwaysPull bool
 
-	timeoutSecs int
+	timeoutSecs      int
+	indexTimeoutSecs int
 
 	port     uint
 	username string
@@ -172,15 +230,16 @@ const defaultPort = 8091
 
 func defaultNodeConfig() nodeConfig {
 	return nodeConfig{
-		image:         "docker.io/library/couchbase:community-6.0.0",
-		alwaysPull:    true,
-		timeoutSecs:   20,
-		dataQuotaMb:   1024,
-		indexQuotaMb:  256,
-		searchQuotaMb: 256,
-		port:          defaultPort,
-		username:      "Administrator",
-		password:      "password",
+		image:            "docker.io/library/couchbase:community-6.0.0",
+		alwaysPull:       true,
+		timeoutSecs:      20,
+		indexTimeoutSecs: 20,
+		dataQuotaMb:      1024,
+		indexQuotaMb:     256,
+		searchQuotaMb:    256,
+		port:             defaultPort,
+		username:         "Administrator",
+		password:         "password",
 	}
 }
 
